@@ -253,7 +253,7 @@ void CPU::complete() {
 				
 				// set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
-				inst->getDstPhysicalReg.setReady(true);
+				inst->getDstPhysicalReg().setReady(true);
 				for(j = 0; j < reservationStations->size(); j++){
 					// broadcast the result to mapping table and reservation stations
 					reservationStations[j] = broadcastRegReady(inst->getDstPhysicalReg().getRegNum());	
