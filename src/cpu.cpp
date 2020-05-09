@@ -276,12 +276,13 @@ void CPU::retire() {
 		// setRetireCycle for the instruction that is retired
 		inst->setRetireCycle(cycle);
 		
-		// update freePhysRegsPrevCycle array that add the physical registers in current cycle to the free list in the beginning of next cycle
-		mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
-		PhysicalRegister Told = ROBEntry.getTold();
-		freePhysRegsPrevCycle[cycle] = push_back(Told);
+		// update freePhysRegsPrevCycle array that add the physical registers in current 
+		//cycle to the free list in the beginning of next cycle
+			//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
+		PhysicalRegister Told = rob.getHead()->getTold();
+		freePhysRegsPrevCycle[cycle] = Told;
 		// update architectural mapping table
-		archMappingTable.setMapping(inst->getDstOp(), inst->dstPhysicalReg());
+		archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
 		hasProgress = true;
 	}
 	
