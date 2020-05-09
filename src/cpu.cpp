@@ -194,16 +194,17 @@ void CPU::issue() {
 	Instruction* inst;
         int ctr =0;
 	for(i = 0; i < reservationStations.size(); i++){
-                if(ctr >= width){
-                    break;  
-                }
+        if(ctr >= width){
+            break;  
+        }
 		inst = reservationStations[i]->getInst();
 		if(reservationStations[i]->isReadyToExecute()){
 			executeStage.push(inst);
 			// setIssueCycle for the instruction that is issued
 			inst->setIssueCycle(cycle);
+			std::cerr << "Cycle #" << cycle << ": issue   \t" << [inst]->toString() << "\n";	// [inst] may need to be changed
 			hasProgress = true;
-                        ctr++;
+            ctr++;
 		}
 	}
 	
@@ -226,6 +227,7 @@ void CPU::execute() {
 		// setExecuteCycle for the instruction that is started its execution
 		Instruction* inst = executeStage.front();
 		inst->setExecuteCycle(cycle);
+		std::cerr << "Cycle #" << cycle << ": execute \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
 		// setExecTime of the instruction according to the execution time of RS
 		inst->setExecTime(inst->getAllocatedRs()->getExecTime());
 		// Free the reservation stations that are executed
@@ -242,42 +244,37 @@ void CPU::complete() {
 	std::vector<Instruction*>& instList = completeStage.getAllInstructions();
 	int i;
 	int j;
-        int ctr = 0;
+    int ctr = 0;
 	int startExeCycle;
 	int exeTime;
 	for(i = 0; i < instList.size(); i++){
-                if(ctr >= width){
-                    break;
-                }
+        if(ctr >= width){
+            break;
+        }
 		// setCompleteCycle for the instruction that is completed
 		Instruction* inst = instList[i];
-
-///			instList.erase(instList.begin()+i);
-			startExeCycle = inst->getExecuteCycle();
-			exeTime = inst->getExecTime();
-		//	i--;
-			if((startExeCycle + exeTime) <= cycle){
-                                instList.erase(instList.begin()+i);
-                                i--;
-				// add instructions to retireStage that finished their execution time and current cycle
-				retireStage.push(inst);
-				//Set comlete cycke
-				inst->setCompleteCycle(cycle);
-                               if(!inst->isStoreInst()){
-
-                              
-                               // set ready bit of the destination register
+		startExeCycle = inst->getExecuteCycle();
+		exeTime = inst->getExecTime();
+		if((startExeCycle + exeTime) <= cycle){
+            instList.erase(instList.begin()+i);
+            i--;
+			// add instructions to retireStage that finished their execution time and current cycle
+			retireStage.push(inst);
+			//Set comlete cycke
+			inst->setCompleteCycle(cycle);
+			std::cerr << "Cycle #" << cycle << ": complete\t" << [inst]->toString() << "\n"; // [inst] may need to be changed
+            if(!inst->isStoreInst()){
+               // set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
 				inst->getDstPhysicalReg().setReady(true);
 				for(j = 0; j < reservationStations.size(); j++){
 					// broadcast the result to mapping table and reservation stations
 					reservationStations[j]->broadcastRegReady(inst->getDstPhysicalReg().getRegNum());	
 				}
-				
-			       }	
-			}
-                        hasProgress = true;
+	       }	
 		}
+        hasProgress = true;
+	}
 	
 	// Uncomment and use the following two lines at the location which you execute an instruction
 	// std::cerr << "Cycle #" << cycle << ": complete\t" << [inst]->toString() << "\n"; // [inst] may need to be changed
@@ -287,26 +284,26 @@ void CPU::complete() {
 void CPU::retire() {
 	// TODO Your code here
 	int i;
-        for(i = 0; i < width; i++){
- 
-   	if(rob.getHead() != NULL){
-		Instruction* inst = rob.getHead()->getInst();
-		// retire instructions from head of rob
-		if(inst->hasCompleted()){
-			// setRetireCycle for the instruction that is retired
-			inst->setRetireCycle(cycle);
-			if(!inst->isStoreInst()){
-			// update freePhysRegsPrevCycle array that add the physical registers in current 
-			//cycle to the free list in the beginning of next cycle
-				//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
-			PhysicalRegister Told = rob.getHead()->getTold();
-                        Told.setReady(true);
-			freePhysRegsPrevCycle.push_back(Told);
-			// update architectural mapping table
-			archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
-                        }
+    for(i = 0; i < width; i++){
+	   	if(rob.getHead() != NULL){
+			Instruction* inst = rob.getHead()->getInst();
+			// retire instructions from head of rob
+			if(inst->hasCompleted()){
+				// setRetireCycle for the instruction that is retired
+				inst->setRetireCycle(cycle);
+				std::cerr << "Cycle #" << cycle << ": retire  \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
+				if(!inst->isStoreInst()){
+					// update freePhysRegsPrevCycle array that add the physical registers in current 
+					//cycle to the free list in the beginning of next cycle
+					//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
+					PhysicalRegister Told = rob.getHead()->getTold();
+                    Told.setReady(true);
+					freePhysRegsPrevCycle.push_back(Told);
+					// update architectural mapping table
+					archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
+                }
 		       	hasProgress = true;
-                        rob.retireHeadInstruction();
+                rob.retireHeadInstruction();
 	      	}
 	    }
 	}
