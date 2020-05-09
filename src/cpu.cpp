@@ -192,13 +192,18 @@ void CPU::issue() {
 	// Going over all reservation stations and execute the ones that are ready
 	int i;
 	Instruction* inst;
-	for(i = 0; i < width; i++){
+        int ctr =0;
+	for(i = 0; i < reservationStations.size(); i++){
+                if(ctr >= width){
+                    break;  
+                }
 		inst = reservationStations[i]->getInst();
 		if(reservationStations[i]->isReadyToExecute()){
 			executeStage.push(inst);
 			// setIssueCycle for the instruction that is issued
 			inst->setIssueCycle(cycle);
 			hasProgress = true;
+                        ctr++;
 		}
 	}
 	
@@ -226,7 +231,7 @@ void CPU::execute() {
 		// Free the reservation stations that are executed
 		inst->getAllocatedRs()->free();
 		// add executing instructions to completeStage
-		inst->setCompleteCycle(cycle);	
+		completeStage.push(inst);	
 		executeStage.pop();
 		hasProgress = true;
 	}
@@ -237,21 +242,31 @@ void CPU::complete() {
 	std::vector<Instruction*>& instList = completeStage.getAllInstructions();
 	int i;
 	int j;
+        int ctr = 0;
 	int startExeCycle;
 	int exeTime;
 	for(i = 0; i < instList.size(); i++){
+                if(ctr >= width){
+                    break;
+                }
 		// setCompleteCycle for the instruction that is completed
 		Instruction* inst = instList[i];
-		if(inst->getDstOp() != -1){
-			instList.erase(instList.begin()+i);
+
+///			instList.erase(instList.begin()+i);
 			startExeCycle = inst->getExecuteCycle();
 			exeTime = inst->getExecTime();
-			i--;
+		//	i--;
 			if((startExeCycle + exeTime) <= cycle){
+                                instList.erase(instList.begin()+i);
+                                i--;
 				// add instructions to retireStage that finished their execution time and current cycle
 				retireStage.push(inst);
-				
-				// set ready bit of the destination register
+				//Set comlete cycke
+				inst->setCompleteCycle(cycle);
+                               if(!inst->isStoreInst()){
+
+                              
+                               // set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
 				inst->getDstPhysicalReg().setReady(true);
 				for(j = 0; j < reservationStations.size(); j++){
@@ -259,10 +274,11 @@ void CPU::complete() {
 					reservationStations[j]->broadcastRegReady(inst->getDstPhysicalReg().getRegNum());	
 				}
 				
-				hasProgress = true;
+			       }	
 			}
+                        hasProgress = true;
 		}
-	}
+	
 	// Uncomment and use the following two lines at the location which you execute an instruction
 	// std::cerr << "Cycle #" << cycle << ": complete\t" << [inst]->toString() << "\n"; // [inst] may need to be changed
 	// hasProgress = true;
@@ -270,25 +286,30 @@ void CPU::complete() {
 
 void CPU::retire() {
 	// TODO Your code here
-	if(rob.getHead() != NULL){
+	int i;
+        for(i = 0; i < width; i++){
+ 
+   	if(rob.getHead() != NULL){
 		Instruction* inst = rob.getHead()->getInst();
 		// retire instructions from head of rob
 		if(inst->hasCompleted()){
 			// setRetireCycle for the instruction that is retired
 			inst->setRetireCycle(cycle);
-			
+			if(!inst->isStoreInst()){
 			// update freePhysRegsPrevCycle array that add the physical registers in current 
 			//cycle to the free list in the beginning of next cycle
 				//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
 			PhysicalRegister Told = rob.getHead()->getTold();
-            Told.setReady(true);
+                        Told.setReady(true);
 			freePhysRegsPrevCycle.push_back(Told);
 			// update architectural mapping table
 			archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
-			hasProgress = true;
-		}
+                        }
+		       	hasProgress = true;
+                        rob.retireHeadInstruction();
+	      	}
+	    }
 	}
-	
 	
 	// Uncomment and use the following two lines at the location which you execute an instruction
 	// std::cerr << "Cycle #" << cycle << ": retire  \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
