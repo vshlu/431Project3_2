@@ -242,7 +242,7 @@ void CPU::complete() {
 		// setCompleteCycle for the instruction that is completed
 		Instruction* inst = instList[i];
 		if(inst->getDstOp() != -1){
-			instList.erase(instList[i]);
+			instList.erase(i);
 			i--;
 			startExeCycle = inst->getExecuteCycle();
 			exeTime = instList[i]->getExecTime();
