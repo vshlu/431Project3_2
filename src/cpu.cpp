@@ -202,7 +202,7 @@ void CPU::issue() {
 			executeStage.push(inst);
 			// setIssueCycle for the instruction that is issued
 			inst->setIssueCycle(cycle);
-			std::cerr << "Cycle #" << cycle << ": issue   \t" << [inst]->toString() << "\n";	// [inst] may need to be changed
+			std::cerr << "Cycle #" << cycle << ": issue   \t" << inst->toString() << "\n";	// [inst] may need to be changed
 			hasProgress = true;
             ctr++;
 		}
@@ -227,7 +227,7 @@ void CPU::execute() {
 		// setExecuteCycle for the instruction that is started its execution
 		Instruction* inst = executeStage.front();
 		inst->setExecuteCycle(cycle);
-		std::cerr << "Cycle #" << cycle << ": execute \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
+		std::cerr << "Cycle #" << cycle << ": execute \t" << inst->toString() << "\n"; // [inst] may need to be changed
 		// setExecTime of the instruction according to the execution time of RS
 		inst->setExecTime(inst->getAllocatedRs()->getExecTime());
 		// Free the reservation stations that are executed
@@ -262,7 +262,7 @@ void CPU::complete() {
 			retireStage.push(inst);
 			//Set comlete cycke
 			inst->setCompleteCycle(cycle);
-			std::cerr << "Cycle #" << cycle << ": complete\t" << [inst]->toString() << "\n"; // [inst] may need to be changed
+			std::cerr << "Cycle #" << cycle << ": complete\t" << inst->toString() << "\n"; // [inst] may need to be changed
             if(!inst->isStoreInst()){
                // set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
@@ -291,7 +291,7 @@ void CPU::retire() {
 			if(inst->hasCompleted()){
 				// setRetireCycle for the instruction that is retired
 				inst->setRetireCycle(cycle);
-				std::cerr << "Cycle #" << cycle << ": retire  \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
+				std::cerr << "Cycle #" << cycle << ": retire  \t" << inst->toString() << "\n"; // [inst] may need to be changed
 				if(!inst->isStoreInst()){
 					// update freePhysRegsPrevCycle array that add the physical registers in current 
 					//cycle to the free list in the beginning of next cycle
