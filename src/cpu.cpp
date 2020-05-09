@@ -251,8 +251,9 @@ void CPU::complete() {
 				retireStage.push(inst);
 				// broadcast the result to mapping table and reservation stations
 				// set ready bit of the destination register
-				rob.setT(mapTable.setReadyBit(inst->getDstPhysicalReg()));
-				rob.getT().setReady(true);
+				PhysicalRegister T = rob.getT();
+				T = mapTable.setReadyBit(inst->getDstPhysicalReg());
+				T.setReady(true);
 				hasProgress = true;
 			}
 		}
