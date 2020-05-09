@@ -244,9 +244,9 @@ void CPU::complete() {
 		Instruction* inst = instList[i];
 		if(inst->getDstOp() != -1){
 			instList.erase(instList.begin()+i);
-			i--;
 			startExeCycle = inst->getExecuteCycle();
 			exeTime = instList[i]->getExecTime();
+			i--;
 			if((startExeCycle + exeTime) <= cycle){
 				// add instructions to retireStage that finished their execution time and current cycle
 				retireStage.push(inst);
@@ -270,21 +270,24 @@ void CPU::complete() {
 
 void CPU::retire() {
 	// TODO Your code here
-	Instruction* inst = rob.getHead()->getInst();
-	// retire instructions from head of rob
-	if(inst->hasCompleted()){
-		// setRetireCycle for the instruction that is retired
-		inst->setRetireCycle(cycle);
-		
-		// update freePhysRegsPrevCycle array that add the physical registers in current 
-		//cycle to the free list in the beginning of next cycle
-			//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
-		PhysicalRegister Told = rob.getHead()->getTold();
-		freePhysRegsPrevCycle[cycle] = Told;
-		// update architectural mapping table
-		archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
-		hasProgress = true;
+	if(rob.getHead() != NULL){
+		Instruction* inst = rob.getHead()->getInst();
+		// retire instructions from head of rob
+		if(inst->hasCompleted()){
+			// setRetireCycle for the instruction that is retired
+			inst->setRetireCycle(cycle);
+			
+			// update freePhysRegsPrevCycle array that add the physical registers in current 
+			//cycle to the free list in the beginning of next cycle
+				//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
+			PhysicalRegister Told = rob.getHead()->getTold();
+			freePhysRegsPrevCycle[cycle] = Told;
+			// update architectural mapping table
+			archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
+			hasProgress = true;
+		}
 	}
+	
 	
 	// Uncomment and use the following two lines at the location which you execute an instruction
 	// std::cerr << "Cycle #" << cycle << ": retire  \t" << [inst]->toString() << "\n"; // [inst] may need to be changed
