@@ -249,9 +249,11 @@ void CPU::complete() {
 			if((startExeCycle + exeTime) <= cycle){
 				// add instructions to retireStage that finished their execution time and current cycle
 				retireStage.push(inst);
-				// broadcast the result to mapping table and reservation stations
+				
 				// set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
+				// broadcast the result to mapping table and reservation stations
+				broadcastRegReady(inst->getDstPhysicalReg().getRegNum());
 				hasProgress = true;
 			}
 		}
