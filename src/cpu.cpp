@@ -281,7 +281,8 @@ void CPU::retire() {
 			//cycle to the free list in the beginning of next cycle
 				//mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
 			PhysicalRegister Told = rob.getHead()->getTold();
-			freePhysRegsPrevCycle[cycle] = Told;
+            Told.setReady(true);
+			freePhysRegsPrevCycle.push_back(Told);
 			// update architectural mapping table
 			archMappingTable.setMapping(inst->getDstOp(), inst->getDstPhysicalReg());
 			hasProgress = true;
