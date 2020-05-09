@@ -236,6 +236,7 @@ void CPU::complete() {
 	// TODO Your code here
 	std::vector<Instruction*>& instList = completeStage.getAllInstructions();
 	int i;
+	int j;
 	int startExeCycle;
 	int exeTime;
 	for(i = 0; i < instList.size(); i++){
@@ -252,8 +253,12 @@ void CPU::complete() {
 				
 				// set ready bit of the destination register
 				mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
-				// broadcast the result to mapping table and reservation stations
-				broadcastRegReady(inst->getDstPhysicalReg().getRegNum());
+				inst->getDstPhysicalReg.setReady(true);
+				for(j = 0; j < reservationStations->size(); j++){
+					// broadcast the result to mapping table and reservation stations
+					reservationStations[j] = broadcastRegReady(inst->getDstPhysicalReg().getRegNum());	
+				}
+				
 				hasProgress = true;
 			}
 		}
@@ -268,8 +273,9 @@ void CPU::retire() {
 	Instruction* inst = rob.getHead()->getInst();
 	// retire instructions from head of rob
 	if(inst->hasCompleted()){
-		inst->setRetireCycle(cycle);
 		// setRetireCycle for the instruction that is retired
+		inst->setRetireCycle(cycle);
+		
 		// update freePhysRegsPrevCycle array that add the physical registers in current cycle to the free list in the beginning of next cycle
 		mapTable.setReadyBit(inst->getDstPhysicalReg().getRegNum());
 		PhysicalRegister Told = rob.getTold();
